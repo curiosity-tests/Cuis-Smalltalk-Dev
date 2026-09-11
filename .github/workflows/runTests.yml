@@ -1,4 +1,5 @@
 name: Run tests
+run-name: "Run tests ${{ inputs.leg || github.event_name }} ${{ inputs.racecar_run }}"
 'on':
   push:
     branches:
@@ -6,12 +7,30 @@ name: Run tests
   pull_request:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      leg:
+        description: "baseline (uninstrumented) or instrumented (under chalk/curiosity)"
+        type: choice
+        options: [instrumented, baseline]
+        default: baseline
+      profile:
+        description: "CrashOverride chalk profile"
+        type: string
+        default: curiosity-tests-racecar
+      racecar_run:
+        description: "racecar correlation token, echoed into the run name"
+        type: string
+        default: ""
+
+env:
+  CHALK_ON: ${{ inputs.leg == 'instrumented' }}
 jobs:
   Build:
     runs-on: '${{ matrix.os }}'
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v3
       - run: .ContinuousIntegrationScripts/installVm.sh
